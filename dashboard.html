@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ralph - Autonomous Agent Loop Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090a10;
+      --card-bg: #11121d;
+      --card-border: #1e2030;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.15);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.15);
+      --warning: #f59e0b;
+      --warning-glow: rgba(245, 158, 11, 0.15);
+      --danger: #ef4444;
+      --danger-glow: rgba(239, 68, 68, 0.15);
+      --active: #3b82f6;
+      --active-glow: rgba(59, 130, 246, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 1024px) {
+      .container {
+        grid-template-columns: 350px 1fr;
+        grid-template-rows: auto 1fr;
+      }
+      .header-row {
+        grid-column: span 2;
+      }
+    }
+
+    /* Header styling */
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, var(--card-bg) 0%, rgba(17, 18, 29, 0.7) 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #818cf8 0%, #4f46e5 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: white;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+    }
+
+    .brand-title h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-title p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .status-idle { background-color: rgba(156, 163, 175, 0.15); border: 1px solid #9ca3af; color: #9ca3af; }
+    .status-running { background-color: var(--active-glow); border: 1px solid var(--active); color: #60a5fa; animation: pulse 2s infinite; }
+    .status-completed { background-color: var(--success-glow); border: 1px solid var(--success); color: #34d399; }
+    .status-failed { background-color: var(--danger-glow); border: 1px solid var(--danger); color: #f87171; }
+
+    @keyframes pulse {
+      0% { opacity: 0.8; }
+      50% { opacity: 1; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+      100% { opacity: 0.8; }
+    }
+
+    /* Card Layouts */
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1.2rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 0.6rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Left Sidebar: Loop Info and Accounts */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Progress Stats */
+    .progress-bar-container {
+      width: 100%;
+      height: 10px;
+      background-color: var(--card-border);
+      border-radius: 9999px;
+      overflow: hidden;
+      margin: 0.8rem 0;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #818cf8 0%, #6366f1 100%);
+      border-radius: 9999px;
+      width: 0%;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+    }
+
+    .progress-bar-fill.success {
+      background: linear-gradient(90deg, #34d399 0%, #10b981 100%);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+
+    .progress-text {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.6rem 0;
+      border-bottom: 1px dashed var(--card-border);
+      font-size: 0.9rem;
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .stat-val {
+      font-weight: 600;
+    }
+
+    /* Accounts rotation list */
+    .accounts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .account-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: rgba(30, 32, 48, 0.3);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      transition: all 0.2s ease;
+    }
+
+    .account-item.active {
+      border-color: var(--primary);
+      background-color: rgba(99, 102, 241, 0.05);
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.1);
+    }
+
+    .account-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .account-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .account-tool {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .account-status-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      text-transform: uppercase;
+    }
+
+    .badge-idle { background-color: rgba(156, 163, 175, 0.1); color: #9ca3af; border: 1px solid rgba(156, 163, 175, 0.2); }
+    .badge-active { background-color: var(--active-glow); color: #3b82f6; border: 1px solid var(--active); }
+    .badge-rate-limited { background-color: var(--danger-glow); color: #ef4444; border: 1px solid var(--danger); }
+
+    /* Main Panel: PRD Checklists and Progress Logs */
+    .main-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* PRD checklists */
+    .prd-header {
+      margin-bottom: 1rem;
+    }
+    
+    .prd-project-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    .prd-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    .story-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+
+    .story-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .story-list::-webkit-scrollbar-thumb {
+      background-color: var(--card-border);
+      border-radius: 3px;
+    }
+
+    .story-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      background-color: rgba(30, 32, 48, 0.2);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      transition: all 0.2s ease;
+    }
+
+    .story-item.completed {
+      border-color: rgba(16, 185, 129, 0.3);
+      background-color: rgba(16, 185, 129, 0.02);
+    }
+
+    .story-checkbox {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      border: 2px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 0.1rem;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .story-item.completed .story-checkbox {
+      background-color: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+
+    .story-checkbox svg {
+      width: 12px;
+      height: 12px;
+      fill: none;
+      stroke: white;
+      stroke-width: 3;
+      display: none;
+    }
+
+    .story-item.completed .story-checkbox svg {
+      display: block;
+    }
+
+    .story-content {
+      flex-grow: 1;
+    }
+
+    .story-header-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.25rem;
+    }
+
+    .story-id-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .story-id {
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--primary);
+      background-color: var(--primary-glow);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    .story-title-text {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .story-priority {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    .story-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .story-criteria-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .story-criteria-list {
+      list-style-type: none;
+      padding-left: 0.5rem;
+    }
+
+    .story-criterion {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .story-criterion-bullet {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--card-border);
+      flex-shrink: 0;
+    }
+
+    .story-item.completed .story-criterion {
+      color: #a7f3d0;
+    }
+
+    .story-item.completed .story-criterion-bullet {
+      background-color: var(--success);
+    }
+
+    /* Console logs */
+    .console-card {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .console-output {
+      background-color: #05060b;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1rem;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.85rem;
+      color: #38bdf8;
+      overflow-y: auto;
+      max-height: 350px;
+      min-height: 200px;
+      flex-grow: 1;
+      white-space: pre-wrap;
+    }
+
+    .console-output::-webkit-scrollbar {
+      width: 6px;
+    }
+    .console-output::-webkit-scrollbar-thumb {
+      background-color: var(--card-border);
+      border-radius: 3px;
+    }
+
+    .empty-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 150px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Top Header -->
+    <div class="header-row">
+      <div class="brand">
+        <div class="brand-logo">R</div>
+        <div class="brand-title">
+          <h1>Ralph Dashboard</h1>
+          <p>Autonomous AI Agent Loop Runner</p>
+        </div>
+      </div>
+      <div id="overall-status" class="status-badge status-idle">
+        <span class="pulse-dot"></span>
+        <span id="overall-status-text">Checking status...</span>
+      </div>
+    </div>
+
+    <!-- Left Sidebar -->
+    <div class="sidebar">
+      
+      <!-- Execution Progress -->
+      <div class="card">
+        <div class="card-title">Run Progress</div>
+        
+        <div class="stat-row">
+          <span>Loop Status:</span>
+          <span class="stat-val" id="stat-loop-status">Idle</span>
+        </div>
+        <div class="stat-row">
+          <span>Current Iteration:</span>
+          <span class="stat-val" id="stat-iteration">0 / 0</span>
+        </div>
+        
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="iteration-progress-bar"></div>
+        </div>
+        
+        <div class="progress-text">
+          <span>Iteration progress</span>
+          <span id="iteration-progress-pct">0%</span>
+        </div>
+        
+        <div class="stat-row" style="margin-top: 1rem;">
+          <span>Last Updated:</span>
+          <span class="stat-val" id="stat-last-update" style="font-size: 0.8rem; color: var(--text-muted);">Never</span>
+        </div>
+      </div>
+
+      <!-- Accounts Configuration -->
+      <div class="card">
+        <div class="card-title">Accounts Failover List</div>
+        <div class="accounts-list" id="accounts-container">
+          <div class="empty-state">No accounts loaded.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Main Panel -->
+    <div class="main-panel">
+      
+      <!-- PRD Checklist Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>PRD User Stories Checklist</span>
+          <span id="prd-progress-pct-badge" style="font-size: 0.85rem; font-weight: 700; color: var(--success); background-color: var(--success-glow); padding: 0.15rem 0.5rem; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3);">0% Complete</span>
+        </div>
+        
+        <div class="prd-header">
+          <div class="prd-project-title" id="prd-project-name">Loading PRD...</div>
+          <div class="prd-desc" id="prd-project-desc">Waiting for configuration files...</div>
+        </div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill success" id="prd-progress-bar"></div>
+        </div>
+        
+        <div class="story-list" id="stories-container">
+          <div class="empty-state">No stories found in prd.json.</div>
+        </div>
+      </div>
+
+      <!-- Live progress log panel -->
+      <div class="card console-card">
+        <div class="card-title">Progress Log (progress.txt)</div>
+        <div class="console-output" id="console-log">Waiting for progress updates...</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    async function updateDashboard() {
+      try {
+        const response = await fetch('/api/status');
+        if (!response.ok) throw new Error('Failed to fetch status');
+        
+        const data = await response.json();
+        
+        // 1. Update overall status
+        const loopStatus = (data.status && data.status.status) || 'idle';
+        const overallBadge = document.getElementById('overall-status');
+        const overallText = document.getElementById('overall-status-text');
+        
+        overallText.innerText = loopStatus;
+        overallBadge.className = 'status-badge status-' + loopStatus.toLowerCase();
+        
+        // 2. Update Progress Stats
+        document.getElementById('stat-loop-status').innerText = loopStatus.toUpperCase();
+        
+        const currentIter = (data.status && data.status.currentIteration) || 0;
+        const maxIter = (data.status && data.status.maxIterations) || 0;
+        document.getElementById('stat-iteration').innerText = `${currentIter} / ${maxIter}`;
+        
+        const iterPct = maxIter > 0 ? Math.round((currentIter / maxIter) * 100) : 0;
+        document.getElementById('iteration-progress-bar').style.width = iterPct + '%';
+        document.getElementById('iteration-progress-pct').innerText = iterPct + '%';
+        
+        const updatedAt = (data.status && data.status.updatedAt) ? new Date(data.status.updatedAt).toLocaleTimeString() : 'Never';
+        document.getElementById('stat-last-update').innerText = updatedAt;
+        
+        // 3. Render Accounts List
+        const accountsContainer = document.getElementById('accounts-container');
+        if (data.status && data.status.accounts && data.status.accounts.length > 0) {
+          accountsContainer.innerHTML = '';
+          data.status.accounts.forEach((acct, index) => {
+            const isActive = acct.status === 'active';
+            const itemDiv = document.createElement('div');
+            itemDiv.className = `account-item ${isActive ? 'active' : ''}`;
+            
+            const badgeClass = acct.status === 'rate-limited' ? 'badge-rate-limited' : (isActive ? 'badge-active' : 'badge-idle');
+            
+            itemDiv.innerHTML = `
+              <div class="account-info">
+                <span class="account-name">${acct.name}</span>
+                <span class="account-tool">${acct.tool}</span>
+              </div>
+              <span class="account-status-badge ${badgeClass}">${acct.status}</span>
+            `;
+            accountsContainer.appendChild(itemDiv);
+          });
+        } else {
+          accountsContainer.innerHTML = '<div class="empty-state">No accounts loaded.</div>';
+        }
+        
+        // 4. Render PRD details
+        if (data.prd) {
+          document.getElementById('prd-project-name').innerText = data.prd.project || 'Untitled Project';
+          document.getElementById('prd-project-desc').innerText = data.prd.description || 'No description available.';
+          
+          const stories = data.prd.userStories || [];
+          const completedStories = stories.filter(s => s.passes === true || s.passes === 'true').length;
+          const totalStories = stories.length;
+          
+          const prdPct = totalStories > 0 ? Math.round((completedStories / totalStories) * 100) : 0;
+          document.getElementById('prd-progress-pct-badge').innerText = prdPct + '% Complete';
+          document.getElementById('prd-progress-bar').style.width = prdPct + '%';
+          
+          const storiesContainer = document.getElementById('stories-container');
+          if (stories.length > 0) {
+            storiesContainer.innerHTML = '';
+            stories.forEach(story => {
+              const isPassed = story.passes === true || story.passes === 'true';
+              const storyDiv = document.createElement('div');
+              storyDiv.className = `story-item ${isPassed ? 'completed' : ''}`;
+              
+              // Generate acceptance criteria bullet points
+              let criteriaHtml = '';
+              if (story.acceptanceCriteria && story.acceptanceCriteria.length > 0) {
+                criteriaHtml = `
+                  <div class="story-criteria-title">Acceptance Criteria</div>
+                  <ul class="story-criteria-list">
+                    ${story.acceptanceCriteria.map(c => `
+                      <li class="story-criterion">
+                        <span class="story-criterion-bullet"></span>
+                        <span>${c}</span>
+                      </li>
+                    `).join('')}
+                  </ul>
+                `;
+              }
+              
+              storyDiv.innerHTML = `
+                <div class="story-checkbox">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <div class="story-content">
+                  <div class="story-header-info">
+                    <div class="story-id-title">
+                      <span class="story-id">${story.id}</span>
+                      <span class="story-title-text">${story.title}</span>
+                    </div>
+                    <span class="story-priority">Priority: ${story.priority || 1}</span>
+                  </div>
+                  <div class="story-desc">${story.description || ''}</div>
+                  ${criteriaHtml}
+                </div>
+              `;
+              storiesContainer.appendChild(storyDiv);
+            });
+          } else {
+            storiesContainer.innerHTML = '<div class="empty-state">No user stories found in prd.json.</div>';
+          }
+        } else {
+          document.getElementById('prd-project-name').innerText = 'PRD not found';
+          document.getElementById('prd-project-desc').innerText = 'Make sure prd.json is present in the workspace directory.';
+          document.getElementById('stories-container').innerHTML = '<div class="empty-state">No prd.json detected.</div>';
+        }
+        
+        // 5. Update Progress logs
+        const consoleLog = document.getElementById('console-log');
+        if (data.progress) {
+          consoleLog.innerText = data.progress;
+          // Auto-scroll to bottom so user sees latest updates
+          consoleLog.scrollTop = consoleLog.scrollHeight;
+        } else {
+          consoleLog.innerText = 'No progress logs generated yet.';
+        }
+        
+      } catch (err) {
+        console.error('Error fetching dashboard status:', err);
+        document.getElementById('overall-status-text').innerText = 'Offline';
+        document.getElementById('overall-status').className = 'status-badge status-failed';
+      }
+    }
+
+    // Initial update and periodic refresh
+    updateDashboard();
+    setInterval(updateDashboard, 2000);
+  </script>
+</body>
+</html>

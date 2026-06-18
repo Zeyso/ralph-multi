@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>ralph</Name>
+  <Repository>snarktank/ralph:latest</Repository>
+  <Registry>https://hub.docker.com</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/snarktank/ralph/issues</Support>
+  <Project>https://github.com/snarktank/ralph</Project>
+  <Overview>Ralph is an autonomous AI agent loop that runs AI coding tools (Amp, Claude Code, Antigravity, etc.) repeatedly until all PRD items are complete. Each iteration is a fresh instance with clean context. You can configure which agents are executed by setting the AGENT_ACCOUNTS variable and adding multiple API keys for rotation when limits are reached.</Overview>
+  <Category>Tools:</Category>
+  <WebUI>http://[IP]:[PORT:3000]</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/snarktank/ralph/main/templates/ralph.xml</TemplateURL>
+  <Icon>https://antigravity.google/favicon.ico</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires/>
+
+  <!-- Config: Codebase path -->
+  <Config Name="Project Path" Target="/workspace/project" Default="/mnt/user/appdata/ralph/project" Mode="rw" Description="Path to your project codebase directory (source code, tests, etc.) on Unraid" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/ralph/project</Config>
+
+  <!-- Config: prd.json file selector mapping -->
+  <Config Name="PRD File" Target="/workspace/project/prd.json" Default="" Mode="rw" Description="Select the specific prd.json file on your host system to be mounted for this run (like selecting an ISO for a VM)" Type="Path" Display="always" Required="true" Mask="false"></Config>
+
+  <!-- Config: Web UI Port Mapping -->
+  <Config Name="Web UI Port" Target="3000" Default="3000" Mode="tcp" Description="Host port to map for the Ralph Dashboard Web UI" Type="Port" Display="always" Required="true" Mask="false">3000</Config>
+
+  <!-- Config: AGENT_ACCOUNTS -->
+  <Config Name="Active Accounts List" Target="AGENT_ACCOUNTS" Default="claude-1,antigravity-1" Mode="" Description="Comma-separated list of accounts to use and rotate (e.g. claude-1,antigravity-1,claude-2)" Type="Variable" Display="always" Required="true" Mask="false">claude-1,antigravity-1</Config>
+
+  <!-- Config: MAX_ITERATIONS -->
+  <Config Name="Max Iterations" Target="MAX_ITERATIONS" Default="10" Mode="" Description="Maximum loop iterations to run before stopping if stories aren't completed" Type="Variable" Display="always" Required="false" Mask="false">10</Config>
+
+  <!-- Config: ANTHROPIC_API_KEYS (Claude) -->
+  <Config Name="Anthropic API Key 1" Target="ANTHROPIC_API_KEY_1" Default="" Mode="" Description="Anthropic API Key for claude-1 account" Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  
+  <Config Name="Anthropic API Key 2" Target="ANTHROPIC_API_KEY_2" Default="" Mode="" Description="Anthropic API Key for claude-2 account" Type="Variable" Display="always" Required="false" Mask="true"></Config>
+
+  <!-- Config: GOOGLE_API_KEYS (Antigravity/Gemini) -->
+  <Config Name="Google API Key 1" Target="GOOGLE_API_KEY_1" Default="" Mode="" Description="Google API Key for antigravity-1 account" Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  
+  <Config Name="Google API Key 2" Target="GOOGLE_API_KEY_2" Default="" Mode="" Description="Google API Key for antigravity-2 account" Type="Variable" Display="always" Required="false" Mask="true"></Config>
+
+  <!-- Config: ANTIGRAVITY_API_KEYS (alternative mapping name) -->
+  <Config Name="Antigravity API Key 1" Target="ANTIGRAVITY_API_KEY_1" Default="" Mode="" Description="Alternative key for antigravity-1 (leave blank if GOOGLE_API_KEY_1 is set)" Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+
+  <Config Name="Antigravity API Key 2" Target="ANTIGRAVITY_API_KEY_2" Default="" Mode="" Description="Alternative key for antigravity-2 (leave blank if GOOGLE_API_KEY_2 is set)" Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+
+  <!-- Config: Defaults (for single account legacy mode) -->
+  <Config Name="Default AI Agent Tool" Target="AGENT_TOOL" Default="amp" Mode="" Description="Fallback default agent tool if AGENT_ACCOUNTS is empty (amp or claude)" Type="Variable" Display="advanced" Required="false" Mask="false">amp</Config>
+
+  <Config Name="Default Anthropic Key" Target="ANTHROPIC_API_KEY" Default="" Mode="" Description="Fallback default Anthropic Key if AGENT_ACCOUNTS is empty" Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+
+  <Config Name="Default Google Key" Target="GOOGLE_API_KEY" Default="" Mode="" Description="Fallback default Google Key if AGENT_ACCOUNTS is empty" Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+
+  <!-- General Container Settings -->
+  <Config Name="Additional Arguments" Target="RALPH_ARGS" Default="" Mode="" Description="Any additional command-line parameters to pass to ralph.sh (e.g. --input-method file)" Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+
+  <Config Name="Keep Container Alive" Target="KEEP_ALIVE" Default="false" Mode="" Description="Set to true to keep the container running after ralph completes, allowing shell inspection" Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+
+  <Config Name="Timezone" Target="TZ" Default="Europe/Berlin" Mode="" Description="Container timezone" Type="Variable" Display="advanced" Required="false" Mask="false">Europe/Berlin</Config>
+
+  <!-- Volumes for persisting agent configurations -->
+  <Config Name="Amp Config Path" Target="/root/.config/amp" Default="/mnt/user/appdata/ralph/amp-config" Mode="rw" Description="Persistence folder for Amp credentials and settings" Type="Path" Display="advanced" Required="false" Mask="false">/mnt/user/appdata/ralph/amp-config</Config>
+
+  <Config Name="Claude Config Path" Target="/root/.claude" Default="/mnt/user/appdata/ralph/claude-config" Mode="rw" Description="Persistence folder for Claude Code credentials" Type="Path" Display="advanced" Required="false" Mask="false">/mnt/user/appdata/ralph/claude-config</Config>
+
+  <Config Name="Antigravity Config Path" Target="/root/.config/agy" Default="/mnt/user/appdata/ralph/agy-config" Mode="rw" Description="Persistence folder for agy credentials" Type="Path" Display="advanced" Required="false" Mask="false">/mnt/user/appdata/ralph/agy-config</Config>
+
+</Container>

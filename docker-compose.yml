@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  ralph:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ralph
+    hostname: ralph
+
+    # Exit when job is complete, do not restart automatically
+    restart: "no"
+
+    ports:
+      # Expose Web Dashboard Port
+      - "3000:3000"
+
+    environment:
+      # The AI Agent to execute (e.g., amp, claude, antigravity, codex, custom)
+      - AGENT_TOOL=${AGENT_TOOL:-amp}
+      
+      # Comma-separated list of active accounts for rotation (e.g. claude-1,antigravity-1)
+      - AGENT_ACCOUNTS=${AGENT_ACCOUNTS:-}
+      
+      # Maximum iterations of the Ralph loop
+      - MAX_ITERATIONS=${MAX_ITERATIONS:-10}
+      
+      # Additional arguments to pass to ralph.sh (e.g. --input-method file)
+      - RALPH_ARGS=${RALPH_ARGS:-}
+      
+      # Set to "true" if you want to keep the container running after completion
+      - KEEP_ALIVE=${KEEP_ALIVE:-false}
+      
+      # Container timezone
+      - TZ=${TZ:-Europe/Berlin}
+      
+      # Google / Antigravity API keys
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - ANTIGRAVITY_API_KEY=${ANTIGRAVITY_API_KEY:-}
+      - GOOGLE_API_KEY_1=${GOOGLE_API_KEY_1:-}
+      - GOOGLE_API_KEY_2=${GOOGLE_API_KEY_2:-}
+      - ANTIGRAVITY_API_KEY_1=${ANTIGRAVITY_API_KEY_1:-}
+      - ANTIGRAVITY_API_KEY_2=${ANTIGRAVITY_API_KEY_2:-}
+      
+      # Anthropic API key for Claude Code (if running claude preset)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ANTHROPIC_API_KEY_1=${ANTHROPIC_API_KEY_1:-}
+      - ANTHROPIC_API_KEY_2=${ANTHROPIC_API_KEY_2:-}
+
+    volumes:
+      # Your codebase directory (contains the code, tests, and prd.json)
+      - ./project:/workspace/project
+
+      # Persist credentials and configurations for different agents
+      - ./config/amp:/root/.config/amp
+      - ./config/claude:/root/.claude
+      - ./config/agy:/root/.config/agy

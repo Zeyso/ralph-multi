@@ -18,13 +18,17 @@ cd flowchart && npm run build
 
 # Run Ralph with Claude Code
 ./ralph.sh --tool claude [max_iterations]
+
+# Run Ralph with custom agents (configured in ralph.config.json or via CLI args)
+./ralph.sh --tool antigravity [max_iterations]
 ```
 
 ## Key Files
 
-- `ralph.sh` - The bash loop that spawns fresh AI instances (supports `--tool amp` or `--tool claude`)
-- `prompt.md` - Instructions given to each AMP instance
--  `CLAUDE.md` - Instructions given to each Claude Code instance
+- `ralph.sh` - The bash loop that spawns fresh AI instances (agent-agnostic, supports any custom or preset tools)
+- `ralph.config.json` - Configuration file for tool execution commands, input methods, and defaults
+- `prompt.md` - Instructions given to each AMP instance (or custom agents by default)
+- `CLAUDE.md` - Instructions given to each Claude Code instance
 - `prd.json.example` - Example PRD format
 - `flowchart/` - Interactive React Flow diagram explaining how Ralph works
 

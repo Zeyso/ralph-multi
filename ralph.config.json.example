@@ -1,0 +1,54 @@
+{
+  "defaultTool": "amp",
+  "maxIterations": 10,
+  "tools": {
+    "amp": {
+      "cmd": "amp --dangerously-allow-all",
+      "inputMethod": "stdin",
+      "promptFile": "prompt.md"
+    },
+    "claude": {
+      "cmd": "claude --dangerously-skip-permissions --print",
+      "inputMethod": "stdin",
+      "promptFile": "CLAUDE.md"
+    },
+    "antigravity": {
+      "cmd": "antigravity-cli run",
+      "inputMethod": "file",
+      "promptFile": "prompt.md"
+    },
+    "codex": {
+      "cmd": "codex-agent --run",
+      "inputMethod": "stdin",
+      "promptFile": "prompt.md"
+    },
+    "aider": {
+      "cmd": "aider --message-file",
+      "inputMethod": "file",
+      "promptFile": "prompt.md"
+    }
+  },
+  "accounts": [
+    {
+      "name": "claude-personal",
+      "tool": "claude",
+      "env": {
+        "ANTHROPIC_API_KEY": "sk-ant-personal-key-here"
+      }
+    },
+    {
+      "name": "antigravity-work",
+      "tool": "antigravity",
+      "env": {
+        "GOOGLE_API_KEY": "AIzaSyWorkKeyHere"
+      }
+    },
+    {
+      "name": "claude-work",
+      "tool": "claude",
+      "env": {
+        "ANTHROPIC_API_KEY": "sk-ant-work-key-here"
+      }
+    }
+  ]
+}
